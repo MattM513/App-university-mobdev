@@ -127,26 +127,6 @@ L’application suit une architecture **MVVM (Model - View - ViewModel)**.
 
 ---
 
-## Flux de Données (Data Flow)
-
-Exemple : Création d’un enseignant par l’administrateur
-
-```mermaid
-flowchart TD
-    A[TeacherFormScreen] -->|onClick Save| B[TeacherViewModel.insertTeacher()]
-    B -->|Coroutine| C[SCRUDRepository.insertTeacher()]
-    C --> D[TeacherDao.insert()]
-    D -->|Mise à jour DB| E[Room]
-    E -->|Flow émis| F[Repository]
-    F --> G[TeacherViewModel StateFlow]
-    G --> H[TeacherListScreen : collectAsState()]
-    H -->|Recomposition| I[Liste des enseignants mise à jour]
-```
-
-Le flux de données est **unidirectionnel** et **réactif**, basé sur **Kotlin Flows** et **Coroutines**.
-
----
-
 ## Technologies et Bibliothèques
 
 | Bibliothèque       | Rôle                     | Justification                                           |
