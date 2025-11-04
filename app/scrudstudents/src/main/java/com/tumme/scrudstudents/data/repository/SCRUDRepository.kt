@@ -3,9 +3,7 @@ package com.tumme.scrudstudents.data.repository
 import com.tumme.scrudstudents.data.local.dao.CourseDao
 import com.tumme.scrudstudents.data.local.dao.StudentDao
 import com.tumme.scrudstudents.data.local.dao.SubscribeDao
-import com.tumme.scrudstudents.data.local.model.CourseEntity
-import com.tumme.scrudstudents.data.local.model.StudentEntity
-import com.tumme.scrudstudents.data.local.model.SubscribeEntity
+import com.tumme.scrudstudents.data.local.model.*
 import kotlinx.coroutines.flow.Flow
 
 class SCRUDRepository(
@@ -31,4 +29,6 @@ class SCRUDRepository(
     fun getSubscribesByCourse(cId: Int): Flow<List<SubscribeEntity>> = subscribeDao.getSubscribesByCourse(cId)
     suspend fun insertSubscribe(subscribe: SubscribeEntity) = subscribeDao.insert(subscribe)
     suspend fun deleteSubscribe(subscribe: SubscribeEntity) = subscribeDao.delete(subscribe)
+
+    fun getSubscriptionDetails(): Flow<List<SubscriptionDetails>> = subscribeDao.getSubscriptionDetails()
 }

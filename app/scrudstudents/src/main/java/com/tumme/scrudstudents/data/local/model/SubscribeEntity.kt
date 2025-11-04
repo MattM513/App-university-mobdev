@@ -2,21 +2,27 @@ package com.tumme.scrudstudents.data.local.model
 
 import androidx.room.Entity
 import androidx.room.ForeignKey
-import androidx.room.PrimaryKey
-import androidx.room.Index
-import androidx.room.ColumnInfo
 
 @Entity(
-    tableName = "subscribes",
-    primaryKeys = ["studentId", "courseId"],
+    tableName = "subscribe_table",
+    primaryKeys = ["idStudent", "idCourse"],
     foreignKeys = [
-        ForeignKey(entity = StudentEntity::class, parentColumns = ["idStudent"], childColumns = ["studentId"], onDelete = ForeignKey.CASCADE),
-        ForeignKey(entity = CourseEntity::class, parentColumns = ["idCourse"], childColumns = ["courseId"], onDelete = ForeignKey.CASCADE)
-    ],
-    indices = [Index("studentId"), Index("courseId")]
+        ForeignKey(
+            entity = StudentEntity::class,
+            parentColumns = ["idStudent"],
+            childColumns = ["idStudent"],
+            onDelete = ForeignKey.CASCADE
+        ),
+        ForeignKey(
+            entity = CourseEntity::class,
+            parentColumns = ["idCourse"],
+            childColumns = ["idCourse"],
+            onDelete = ForeignKey.CASCADE
+        )
+    ]
 )
 data class SubscribeEntity(
-    val studentId: Int,
-    val courseId: Int,
+    val idStudent: Int,
+    val idCourse: Int,
     val score: Float
 )

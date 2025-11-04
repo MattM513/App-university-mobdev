@@ -6,7 +6,7 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface CourseDao {
-    @Query("SELECT * FROM courses ORDER BY nameCourse")
+    @Query("SELECT * FROM courses ORDER BY nameCourse ASC")
     fun getAllCourses(): Flow<List<CourseEntity>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
