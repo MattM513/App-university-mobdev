@@ -8,6 +8,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -21,25 +22,26 @@ import com.tumme.scrudstudents.data.local.model.SubscriptionDetails
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SubscribeListScreen(
+    studentId: Int,
     viewModel: SubscribeViewModel = hiltViewModel(),
-    onNavigateToForm: () -> Unit,
     onNavigateBack: () -> Unit
 ) {
     val subscriptions by viewModel.subscriptions.collectAsState()
 
+    LaunchedEffect(studentId) {
+        viewModel.loadSubscriptions(studentId)
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Subscriptions") },
+                title = { Text("My Subscriptions") },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back")
                     }
                 }
             )
-        },
-        floatingActionButton = {
-            FloatingActionButton(onClick = onNavigateToForm) { Text("+") }
         }
     ) { padding ->
         LazyColumn(

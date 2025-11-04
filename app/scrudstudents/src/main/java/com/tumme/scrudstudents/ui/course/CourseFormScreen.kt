@@ -4,7 +4,7 @@ import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.getValue
@@ -19,6 +19,7 @@ import com.tumme.scrudstudents.data.local.model.CourseEntity
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CourseFormScreen(
+    teacherId: Int,
     viewModel: CourseListViewModel = hiltViewModel(),
     onNavigateBack: () -> Unit
 ) {
@@ -37,7 +38,7 @@ fun CourseFormScreen(
                 title = { Text("New Course") },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 }
             )
@@ -113,7 +114,7 @@ fun CourseFormScreen(
                             nameCourse = name.trim(),
                             ectsCourse = ectsFloat,
                             levelCourse = level,
-                            teacherId = viewModel.loggedInTeacherId
+                            teacherId = teacherId
                         )
                         viewModel.insertCourse(newCourse)
                         onNavigateBack()

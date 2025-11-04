@@ -18,6 +18,8 @@ import com.tumme.scrudstudents.data.local.model.StudentEntity
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SubscribeFormScreen(
+    studentId: Int? = null,
+    teacherId: Int? = null,
     viewModel: SubscribeViewModel = hiltViewModel(),
     onNavigateBack: () -> Unit
 ) {
@@ -33,10 +35,22 @@ fun SubscribeFormScreen(
 
     val context = LocalContext.current
 
+    val isStudentMode = studentId != null
+    val isTeacherMode = teacherId != null
+
+    LaunchedEffect(allStudents, studentId) {
+        if (isStudentMode) {
+            selectedStudent = allStudents.find { it.idStudent == studentId }
+        }
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("New Subscription") },
+                title = {
+                    val title = if (isStudentMode) "Enroll in Course" else "Enter Grade"
+                    Text(title)
+                },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back")
@@ -53,34 +67,44 @@ fun SubscribeFormScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
 
-            ExposedDropdownMenuBox(
-                expanded = isStudentDropdownExpanded,
-                onExpandedChange = { isStudentDropdownExpanded = !isStudentDropdownExpanded }
-            ) {
+            if (isTeacherMode) {
+                ExposedDropdownMenuBox(
+                    expanded = isStudentDropdownExpanded,
+                    onExpandedChange = { isStudentDropdownExpanded = !isStudentDropdownExpanded }
+                ) {
+                    OutlinedTextField(
+                        value = selectedStudent?.let { "${it.lastName} ${it.firstName}" } ?: "Select Student",
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text("Student") },
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = isStudentDropdownExpanded) },
+                        modifier = Modifier
+                            .menuAnchor()
+                            .fillMaxWidth()
+                    )
+                    ExposedDropdownMenu(
+                        expanded = isStudentDropdownExpanded,
+                        onDismissRequest = { isStudentDropdownExpanded = false }
+                    ) {
+                        allStudents.forEach { student ->
+                            DropdownMenuItem(
+                                text = { Text("${student.lastName} ${student.firstName}") },
+                                onClick = {
+                                    selectedStudent = student
+                                    isStudentDropdownExpanded = false
+                                }
+                            )
+                        }
+                    }
+                }
+            } else {
                 OutlinedTextField(
-                    value = selectedStudent?.let { "${it.lastName} ${it.firstName}" } ?: "Select Student",
+                    value = selectedStudent?.let { "${it.lastName} ${it.firstName}" } ?: "Loading...",
                     onValueChange = {},
                     readOnly = true,
                     label = { Text("Student") },
-                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = isStudentDropdownExpanded) },
-                    modifier = Modifier
-                        .menuAnchor()
-                        .fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth()
                 )
-                ExposedDropdownMenu(
-                    expanded = isStudentDropdownExpanded,
-                    onDismissRequest = { isStudentDropdownExpanded = false }
-                ) {
-                    allStudents.forEach { student ->
-                        DropdownMenuItem(
-                            text = { Text("${student.lastName} ${student.firstName}") },
-                            onClick = {
-                                selectedStudent = student
-                                isStudentDropdownExpanded = false
-                            }
-                        )
-                    }
-                }
             }
 
             ExposedDropdownMenuBox(
@@ -116,18 +140,20 @@ fun SubscribeFormScreen(
             OutlinedTextField(
                 value = score,
                 onValueChange = { score = it },
-                label = { Text("Score (e.g., 15.5)") },
+                label = { Text(if (isStudentMode) "Score (leave empty)" else "Score (e.g., 15.5)") },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                readOnly = isStudentMode
             )
 
             Spacer(modifier = Modifier.weight(1f))
 
             Button(
                 onClick = {
-                    val scoreFloat = score.toFloatOrNull()
+                    val scoreFloat = if (isStudentMode) 0f else score.toFloatOrNull()
+
                     if (selectedStudent == null || selectedCourse == null || scoreFloat == null) {
-                        Toast.makeText(context, "All fields are required", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, "Student and Course are required", Toast.LENGTH_SHORT).show()
                     } else {
                         viewModel.addSubscription(
                             studentId = selectedStudent!!.idStudent,
@@ -139,7 +165,7 @@ fun SubscribeFormScreen(
                 },
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("SAVE SUBSCRIPTION")
+                Text(if (isStudentMode) "ENROLL" else "SAVE GRADE")
             }
         }
     }

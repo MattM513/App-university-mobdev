@@ -13,17 +13,23 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.tumme.scrudstudents.data.local.model.CourseEntity
+import com.tumme.scrudstudents.data.local.model.CourseWithTeacher
 import com.tumme.scrudstudents.ui.components.TableHeader
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CourseListScreen(
+    teacherId: Int? = null,
+    filterLevel: String? = null,
     viewModel: CourseListViewModel = hiltViewModel(),
-    onNavigateToForm: () -> Unit = {},
-    onNavigateBack: () -> Unit = {}
+    onNavigateToForm: (() -> Unit)? = null,
+    onNavigateBack: () -> Unit
 ) {
     val courses by viewModel.courses.collectAsState()
+
+    LaunchedEffect(teacherId, filterLevel) {
+        viewModel.loadCourses(teacherId, filterLevel)
+    }
 
     Scaffold(
         topBar = {
@@ -32,13 +38,15 @@ fun CourseListScreen(
                     IconButton(onClick = onNavigateBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back to Students"
+                            contentDescription = "Back"
                         )
                     }
                 })
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = onNavigateToForm) { Text("+") }
+            if (onNavigateToForm != null) {
+                FloatingActionButton(onClick = onNavigateToForm) { Text("+") }
+            }
         }
     ) { padding ->
         Column(modifier = Modifier
@@ -46,17 +54,21 @@ fun CourseListScreen(
             .padding(padding)
             .padding(16.dp)) {
 
-            TableHeader(cells = listOf("Name", "ECTS", "Level", "Actions"),
-                weights = listOf(0.4f, 0.2f, 0.2f, 0.2f))
+            TableHeader(
+                cells = listOf("Name", "Teacher", "ECTS", "Level", "Actions"),
+                weights = listOf(0.3f, 0.2f, 0.15f, 0.15f, 0.2f)
+            )
 
             Spacer(modifier = Modifier.height(8.dp))
 
             LazyColumn(modifier = Modifier.fillMaxSize()) {
-                items(courses) { course ->
+                items(courses) { courseWithTeacher ->
                     CourseRow(
-                        course = course,
-                        onEdit = { /* ... */ },
-                        onDelete = { viewModel.deleteCourse(course) }
+                        courseWithTeacher = courseWithTeacher,
+                        onDelete = {
+                            viewModel.deleteCourse(courseWithTeacher.course)
+                        },
+                        showDelete = (teacherId != null)
                     )
                 }
             }
@@ -64,9 +76,11 @@ fun CourseListScreen(
     }
 }
 
-
 @Composable
-fun CourseRow(course: CourseEntity, onEdit: () -> Unit, onDelete: () -> Unit) {
+fun CourseRow(courseWithTeacher: CourseWithTeacher, onDelete: () -> Unit, showDelete: Boolean) {
+    val course = courseWithTeacher.course
+    val teacherName = "${courseWithTeacher.teacherFirstName ?: ""} ${courseWithTeacher.teacherLastName ?: "N/A"}"
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -75,24 +89,32 @@ fun CourseRow(course: CourseEntity, onEdit: () -> Unit, onDelete: () -> Unit) {
     ) {
         Text(
             text = course.nameCourse,
-            modifier = Modifier.weight(0.4f),
+            modifier = Modifier.weight(0.3f),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+        Text(
+            text = teacherName,
+            modifier = Modifier.weight(0.2f),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
         )
         Text(
             text = course.ectsCourse.toString(),
-            modifier = Modifier.weight(0.2f)
+            modifier = Modifier.weight(0.15f)
         )
         Text(
             text = course.levelCourse,
-            modifier = Modifier.weight(0.2f)
+            modifier = Modifier.weight(0.15f)
         )
         Box(
             modifier = Modifier.weight(0.2f),
             contentAlignment = Alignment.CenterEnd
         ) {
-            IconButton(onClick = onDelete) {
-                Icon(imageVector = Icons.Default.Delete, contentDescription = "Delete Course")
+            if (showDelete) {
+                IconButton(onClick = onDelete) {
+                    Icon(imageVector = Icons.Default.Delete, contentDescription = "Delete Course")
+                }
             }
         }
     }
