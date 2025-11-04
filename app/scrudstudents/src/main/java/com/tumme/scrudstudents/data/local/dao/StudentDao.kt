@@ -26,4 +26,7 @@ interface StudentDao {
     // 'suspend' car c'est une opération "one-shot" (qui s'exécute une fois).
     @Query("SELECT * FROM students WHERE idStudent = :id LIMIT 1")
     suspend fun getStudentById(id: Int): StudentEntity?
+
+    @Query("SELECT * FROM students WHERE email = :email LIMIT 1")
+    suspend fun getStudentByEmail(email: String): StudentEntity?
 }

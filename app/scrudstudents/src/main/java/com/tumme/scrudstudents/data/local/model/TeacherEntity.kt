@@ -4,16 +4,14 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 import java.util.Date
 
-@Entity(tableName = "students")
-data class StudentEntity(
+@Entity(tableName = "teachers")
+data class TeacherEntity(
     @PrimaryKey(autoGenerate = true)
-    val idStudent: Int = 0,
+    val idTeacher: Int = 0,
     val lastName: String,
     val firstName: String,
-    val dateOfBirth: Date,
-    val gender: Gender,
 
     val email: String,
-    val password: String,
-    val level: String
-)
+    val password: String
+
+    )

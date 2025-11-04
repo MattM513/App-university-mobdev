@@ -112,7 +112,8 @@ fun CourseFormScreen(
                         val newCourse = CourseEntity(
                             nameCourse = name.trim(),
                             ectsCourse = ectsFloat,
-                            levelCourse = level
+                            levelCourse = level,
+                            teacherId = viewModel.loggedInTeacherId
                         )
                         viewModel.insertCourse(newCourse)
                         onNavigateBack()

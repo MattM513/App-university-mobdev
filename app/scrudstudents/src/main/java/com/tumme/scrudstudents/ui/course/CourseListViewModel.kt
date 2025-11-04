@@ -11,18 +11,19 @@ import javax.inject.Inject
 
 @HiltViewModel
 class CourseListViewModel @Inject constructor(
-    private val repo: SCRUDRepository // Hilt injecte le même repo
+    private val repo: SCRUDRepository
 ) : ViewModel() {
 
-    // TODO: Change la source des données
+    // Simule l'ID de l'enseignant connecté. Nous remplacerons cela par une vraie session.
+    val loggedInTeacherId = 1
+
     private val _courses: StateFlow<List<CourseEntity>> =
         repo.getAllCourses().stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
-    val courses: StateFlow<List<CourseEntity>> = _courses // Renommée
+    val courses: StateFlow<List<CourseEntity>> = _courses
 
     private val _events = MutableSharedFlow<String>()
     val events = _events.asSharedFlow()
 
-    // TODO: Adapte les fonctions pour utiliser CourseEntity
     fun deleteCourse(course: CourseEntity) = viewModelScope.launch {
         repo.deleteCourse(course)
         _events.emit("Course deleted")
