@@ -14,7 +14,6 @@ class CourseListViewModel @Inject constructor(
     private val repo: SCRUDRepository
 ) : ViewModel() {
 
-    // Simule l'ID de l'enseignant connecté. Nous remplacerons cela par une vraie session.
     val loggedInTeacherId = 1
 
     private val _courses: StateFlow<List<CourseEntity>> =
