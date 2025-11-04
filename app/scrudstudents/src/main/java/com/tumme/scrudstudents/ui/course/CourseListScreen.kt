@@ -21,19 +21,24 @@ import com.tumme.scrudstudents.ui.components.TableHeader
 fun CourseListScreen(
     teacherId: Int? = null,
     filterLevel: String? = null,
+    isAdmin: Boolean = false,
     viewModel: CourseListViewModel = hiltViewModel(),
     onNavigateToForm: (() -> Unit)? = null,
     onNavigateBack: () -> Unit
 ) {
     val courses by viewModel.courses.collectAsState()
 
-    LaunchedEffect(teacherId, filterLevel) {
-        viewModel.loadCourses(teacherId, filterLevel)
+    LaunchedEffect(teacherId, filterLevel, isAdmin) {
+        if (isAdmin) {
+            viewModel.loadCourses()
+        } else {
+            viewModel.loadCourses(teacherId, filterLevel)
+        }
     }
 
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text("Courses") },
+            TopAppBar(title = { Text(if (isAdmin) "Manage Courses" else "Courses") },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(
@@ -68,7 +73,7 @@ fun CourseListScreen(
                         onDelete = {
                             viewModel.deleteCourse(courseWithTeacher.course)
                         },
-                        showDelete = (teacherId != null)
+                        showDelete = (teacherId != null || isAdmin)
                     )
                 }
             }

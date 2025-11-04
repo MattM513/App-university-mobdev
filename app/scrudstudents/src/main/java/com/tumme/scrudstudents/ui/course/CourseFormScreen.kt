@@ -15,12 +15,16 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.tumme.scrudstudents.data.local.model.CourseEntity
+import com.tumme.scrudstudents.data.local.model.TeacherEntity
+import com.tumme.scrudstudents.ui.teacher.TeacherViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CourseFormScreen(
-    teacherId: Int,
-    viewModel: CourseListViewModel = hiltViewModel(),
+    teacherId: Int?,
+    isAdmin: Boolean = false,
+    courseViewModel: CourseListViewModel = hiltViewModel(),
+    teacherViewModel: TeacherViewModel = hiltViewModel(),
     onNavigateBack: () -> Unit
 ) {
     var name by remember { mutableStateOf("") }
@@ -30,7 +34,17 @@ fun CourseFormScreen(
     var level by remember { mutableStateOf(levels[0]) }
     var isLevelDropdownExpanded by remember { mutableStateOf(false) }
 
+    val teachers by teacherViewModel.teachers.collectAsState()
+    var selectedTeacher by remember { mutableStateOf<TeacherEntity?>(null) }
+    var isTeacherDropdownExpanded by remember { mutableStateOf(false) }
+
     val context = LocalContext.current
+
+    LaunchedEffect(teachers, teacherId, isAdmin) {
+        if (!isAdmin && teacherId != null) {
+            selectedTeacher = teachers.find { it.idTeacher == teacherId }
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -97,11 +111,44 @@ fun CourseFormScreen(
                 }
             }
 
+            if (isAdmin) {
+                ExposedDropdownMenuBox(
+                    expanded = isTeacherDropdownExpanded,
+                    onExpandedChange = { isTeacherDropdownExpanded = !isTeacherDropdownExpanded }
+                ) {
+                    OutlinedTextField(
+                        value = selectedTeacher?.let { "${it.lastName} ${it.firstName}" } ?: "Select Teacher (Optional)",
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text("Teacher") },
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = isTeacherDropdownExpanded) },
+                        modifier = Modifier
+                            .menuAnchor()
+                            .fillMaxWidth()
+                    )
+                    ExposedDropdownMenu(
+                        expanded = isTeacherDropdownExpanded,
+                        onDismissRequest = { isTeacherDropdownExpanded = false }
+                    ) {
+                        teachers.forEach { teacher ->
+                            DropdownMenuItem(
+                                text = { Text("${teacher.lastName} ${teacher.firstName}") },
+                                onClick = {
+                                    selectedTeacher = teacher
+                                    isTeacherDropdownExpanded = false
+                                }
+                            )
+                        }
+                    }
+                }
+            }
+
             Spacer(modifier = Modifier.weight(1f))
 
             Button(
                 onClick = {
                     val ectsFloat = ects.toFloatOrNull()
+                    val finalTeacherId = selectedTeacher?.idTeacher ?: teacherId
 
                     if (name.isBlank() || ectsFloat == null || ectsFloat <= 0) {
                         Toast.makeText(
@@ -114,9 +161,9 @@ fun CourseFormScreen(
                             nameCourse = name.trim(),
                             ectsCourse = ectsFloat,
                             levelCourse = level,
-                            teacherId = teacherId
+                            teacherId = if (isAdmin) selectedTeacher?.idTeacher else teacherId
                         )
-                        viewModel.insertCourse(newCourse)
+                        courseViewModel.insertCourse(newCourse)
                         onNavigateBack()
                     }
                 },

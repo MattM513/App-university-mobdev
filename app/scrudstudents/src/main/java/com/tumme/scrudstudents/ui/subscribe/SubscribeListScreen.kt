@@ -22,26 +22,37 @@ import com.tumme.scrudstudents.data.local.model.SubscriptionDetails
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SubscribeListScreen(
-    studentId: Int,
+    studentId: Int? = null,
+    isAdmin: Boolean = false,
     viewModel: SubscribeViewModel = hiltViewModel(),
+    onNavigateToForm: (() -> Unit)? = null,
     onNavigateBack: () -> Unit
 ) {
     val subscriptions by viewModel.subscriptions.collectAsState()
 
-    LaunchedEffect(studentId) {
-        viewModel.loadSubscriptions(studentId)
+    LaunchedEffect(studentId, isAdmin) {
+        if (isAdmin) {
+            viewModel.loadSubscriptions(null)
+        } else {
+            viewModel.loadSubscriptions(studentId)
+        }
     }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("My Subscriptions") },
+                title = { Text(if (isAdmin) "Manage Subscriptions" else "My Subscriptions") },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back")
                     }
                 }
             )
+        },
+        floatingActionButton = {
+            if (onNavigateToForm != null) {
+                FloatingActionButton(onClick = onNavigateToForm) { Text("+") }
+            }
         }
     ) { padding ->
         LazyColumn(
@@ -57,9 +68,10 @@ fun SubscribeListScreen(
                         .padding(vertical = 8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("Student", modifier = Modifier.weight(0.4f), fontWeight = FontWeight.Bold)
-                    Text("Course", modifier = Modifier.weight(0.4f), fontWeight = FontWeight.Bold)
-                    Text("Score", modifier = Modifier.weight(0.2f), fontWeight = FontWeight.Bold)
+                    Text("Student", modifier = Modifier.weight(0.35f), fontWeight = FontWeight.Bold)
+                    Text("Course", modifier = Modifier.weight(0.35f), fontWeight = FontWeight.Bold)
+                    Text("Score", modifier = Modifier.weight(0.15f), fontWeight = FontWeight.Bold)
+                    Text("Del", modifier = Modifier.weight(0.15f), fontWeight = FontWeight.Bold)
                 }
                 HorizontalDivider()
             }
@@ -85,19 +97,19 @@ fun SubscriptionRow(details: SubscriptionDetails, onDelete: () -> Unit) {
     ) {
         Text(
             text = "${details.studentLastName.uppercase()} ${details.studentFirstName}",
-            modifier = Modifier.weight(0.4f),
+            modifier = Modifier.weight(0.35f),
             maxLines = 1, overflow = TextOverflow.Ellipsis
         )
         Text(
             text = details.courseName,
-            modifier = Modifier.weight(0.4f),
+            modifier = Modifier.weight(0.35f),
             maxLines = 1, overflow = TextOverflow.Ellipsis
         )
         Text(
             text = details.score.toString(),
-            modifier = Modifier.weight(0.2f)
+            modifier = Modifier.weight(0.15f)
         )
-        IconButton(onClick = onDelete) {
+        IconButton(onClick = onDelete, modifier = Modifier.weight(0.15f)) {
             Icon(Icons.Default.Delete, "Delete")
         }
     }

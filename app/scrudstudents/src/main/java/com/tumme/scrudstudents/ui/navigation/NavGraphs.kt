@@ -13,17 +13,22 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.navigation.navigation
+import com.tumme.scrudstudents.ui.admin.AdminHomeScreen
 import com.tumme.scrudstudents.ui.auth.AuthViewModel
 import com.tumme.scrudstudents.ui.auth.LoginScreen
 import com.tumme.scrudstudents.ui.auth.RegisterScreen
 import com.tumme.scrudstudents.ui.auth.UserRole
 import com.tumme.scrudstudents.ui.course.CourseFormScreen
 import com.tumme.scrudstudents.ui.course.CourseListScreen
+import com.tumme.scrudstudents.ui.student.StudentFormScreen
 import com.tumme.scrudstudents.ui.student.StudentGradesScreen
 import com.tumme.scrudstudents.ui.student.StudentHomeScreen
+import com.tumme.scrudstudents.ui.student.StudentListScreen
 import com.tumme.scrudstudents.ui.subscribe.SubscribeFormScreen
 import com.tumme.scrudstudents.ui.subscribe.SubscribeListScreen
+import com.tumme.scrudstudents.ui.teacher.TeacherFormScreen
 import com.tumme.scrudstudents.ui.teacher.TeacherHomeScreen
+import com.tumme.scrudstudents.ui.teacher.TeacherListScreen
 
 object Routes {
     const val AUTH_GRAPH = "auth_graph"
@@ -42,6 +47,17 @@ object Routes {
     const val TEACHER_COURSES = "teacher_courses/{teacherId}"
     const val TEACHER_COURSE_FORM = "teacher_course_form/{teacherId}"
     const val TEACHER_GRADE_ENTRY = "teacher_grade_entry/{teacherId}"
+
+    const val ADMIN_GRAPH = "admin_graph"
+    const val ADMIN_HOME = "admin_home"
+    const val ADMIN_STUDENTS = "admin_students"
+    const val ADMIN_STUDENT_FORM = "admin_student_form"
+    const val ADMIN_TEACHERS = "admin_teachers"
+    const val ADMIN_TEACHER_FORM = "admin_teacher_form"
+    const val ADMIN_COURSES = "admin_courses"
+    const val ADMIN_COURSE_FORM = "admin_course_form"
+    const val ADMIN_SUBSCRIPTIONS = "admin_subscriptions"
+    const val ADMIN_SUBSCRIBE_FORM = "admin_subscribe_form"
 }
 
 @Composable
@@ -50,18 +66,15 @@ fun AppNavHost() {
     val authViewModel: AuthViewModel = hiltViewModel()
     val authState by authViewModel.authState.collectAsState()
 
-    val startDestination = if (authState.isAuthenticated) {
-        when (authState.role) {
-            UserRole.STUDENT -> Routes.STUDENT_GRAPH
-            UserRole.TEACHER -> Routes.TEACHER_GRAPH
-            else -> Routes.AUTH_GRAPH
-        }
-    } else {
-        Routes.AUTH_GRAPH
+    val startDestination = when (authState.role) {
+        UserRole.STUDENT -> Routes.STUDENT_GRAPH
+        UserRole.TEACHER -> Routes.TEACHER_GRAPH
+        UserRole.ADMIN -> Routes.ADMIN_GRAPH
+        else -> Routes.AUTH_GRAPH
     }
 
     LaunchedEffect(authState) {
-        if (!authState.isAuthenticated && navController.currentDestination?.parent?.route != Routes.AUTH_GRAPH) {
+        if (!authState.isAuthenticated && authState.role == UserRole.NONE) {
             navController.navigate(Routes.AUTH_GRAPH) {
                 popUpTo(0) { inclusive = true }
             }
@@ -72,6 +85,7 @@ fun AppNavHost() {
         authGraph(navController, authViewModel)
         studentGraph(navController, authViewModel)
         teacherGraph(navController, authViewModel)
+        adminGraph(navController, authViewModel)
     }
 }
 
@@ -87,6 +101,7 @@ private fun NavGraphBuilder.authGraph(navController: NavHostController, authView
                     val route = when (role) {
                         UserRole.STUDENT -> Routes.STUDENT_GRAPH
                         UserRole.TEACHER -> Routes.TEACHER_GRAPH
+                        UserRole.ADMIN -> Routes.ADMIN_GRAPH
                         else -> Routes.LOGIN_SCREEN
                     }
                     navController.navigate(route) {
@@ -103,6 +118,7 @@ private fun NavGraphBuilder.authGraph(navController: NavHostController, authView
                     val route = when (role) {
                         UserRole.STUDENT -> Routes.STUDENT_GRAPH
                         UserRole.TEACHER -> Routes.TEACHER_GRAPH
+                        UserRole.ADMIN -> Routes.ADMIN_GRAPH
                         else -> Routes.LOGIN_SCREEN
                     }
                     navController.navigate(route) {
@@ -233,6 +249,70 @@ private fun NavGraphBuilder.teacherGraph(navController: NavHostController, authV
         ) {
             SubscribeFormScreen(
                 teacherId = authViewModel.authState.collectAsState().value.userId,
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+    }
+}
+
+private fun NavGraphBuilder.adminGraph(navController: NavHostController, authViewModel: AuthViewModel) {
+    navigation(startDestination = Routes.ADMIN_HOME, route = Routes.ADMIN_GRAPH) {
+        composable(Routes.ADMIN_HOME) {
+            AdminHomeScreen(
+                onManageStudents = { navController.navigate(Routes.ADMIN_STUDENTS) },
+                onManageTeachers = { navController.navigate(Routes.ADMIN_TEACHERS) },
+                onManageCourses = { navController.navigate(Routes.ADMIN_COURSES) },
+                onManageSubscriptions = { navController.navigate(Routes.ADMIN_SUBSCRIPTIONS) },
+                onLogout = { authViewModel.logout() }
+            )
+        }
+
+        composable(Routes.ADMIN_STUDENTS) {
+            StudentListScreen(
+                onNavigateToForm = { navController.navigate(Routes.ADMIN_STUDENT_FORM) },
+                onNavigateBack = { navController.popBackStack() },
+                isAdmin = true
+            )
+        }
+        composable(Routes.ADMIN_STUDENT_FORM) {
+            StudentFormScreen(onSaved = { navController.popBackStack() })
+        }
+
+        composable(Routes.ADMIN_TEACHERS) {
+            TeacherListScreen(
+                onNavigateToForm = { navController.navigate(Routes.ADMIN_TEACHER_FORM) },
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+        composable(Routes.ADMIN_TEACHER_FORM) {
+            TeacherFormScreen(onSaved = { navController.popBackStack() })
+        }
+
+        composable(Routes.ADMIN_COURSES) {
+            CourseListScreen(
+                onNavigateToForm = { navController.navigate(Routes.ADMIN_COURSE_FORM) },
+                onNavigateBack = { navController.popBackStack() },
+                isAdmin = true
+            )
+        }
+        composable(Routes.ADMIN_COURSE_FORM) {
+            CourseFormScreen(
+                teacherId = null,
+                isAdmin = true,
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(Routes.ADMIN_SUBSCRIPTIONS) {
+            SubscribeListScreen(
+                onNavigateToForm = { navController.navigate(Routes.ADMIN_SUBSCRIBE_FORM) },
+                onNavigateBack = { navController.popBackStack() },
+                isAdmin = true
+            )
+        }
+        composable(Routes.ADMIN_SUBSCRIBE_FORM) {
+            SubscribeFormScreen(
+                teacherId = 0,
                 onNavigateBack = { navController.popBackStack() }
             )
         }
